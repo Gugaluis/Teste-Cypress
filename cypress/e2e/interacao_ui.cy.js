@@ -1,25 +1,38 @@
 describe("Kanban App - Testes de Interação com a UI", () => {
   beforeEach(() => {
     cy.visit("https://kanban-dusky-five.vercel.app/")
-    cy.get("body").should("be.visible")
+    cy.get("body", { timeout: 10000 }).should("be.visible")
   })
 
-  it("Validando funcionamento toggle Tema", () => {
-    cy.get('input[type="checkbox"][role="switch"]').click({ force: true })
-    cy.wait(500)
-    cy.get("body").should("exist")
+  it("Deve alternar o tema ao clicar no toggle", () => {
+    cy.get('input[type="checkbox"][role="switch"]')
+      .should("exist")
+      .invoke("attr", "aria-checked")
+      .then((initialValue) => {
+        cy.get('input[type="checkbox"][role="switch"]').click({ force: true })
+        cy.wait(300)
+        cy.get('input[type="checkbox"][role="switch"]')
+          .invoke("attr", "aria-checked")
+          .should("not.equal", initialValue)
+      })
   })
 
-  it("Permite interação com toggle de tema (mesmo coberto)", () => {
-    cy.get('input[type="checkbox"][role="switch"]').should("exist")
-    cy.get('input[type="checkbox"][role="switch"]').should("have.attr", "aria-checked")
+  it("Toggle de tema deve estar acessível e configurado corretamente", () => {
+    cy.get('input[type="checkbox"][role="switch"]')
+      .should("exist")
+      .and("have.attr", "aria-checked")
+      .and("match", /^(true|false)$/)
   })
 
-  it("Checando existência de botão para adicionar tarefa", () => {
-    cy.contains("Adicionar Tarefa").should("exist")
+  it("Deve exibir o texto 'Adicionar Tarefa' visível na UI", () => {
+    cy.contains("Adicionar Tarefa")
+      .should("exist")
+      .and("be.visible")
   })
 
-  it("Checando existência de botão para adicionar lista", () => {
-    cy.contains("Adicionar outra lista").should("exist")
+  it("Deve exibir o texto 'Adicionar outra lista' visível na UI", () => {
+    cy.contains("Adicionar outra lista")
+      .should("exist")
+      .and("be.visible")
   })
 })
