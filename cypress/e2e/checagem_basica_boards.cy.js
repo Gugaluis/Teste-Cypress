@@ -1,61 +1,68 @@
 describe("Kanban App - Testes Básicos do Quadro", () => {
+  const baseUrl = "https://kanban-dusky-five.vercel.app/"
+  const columns = ["To Do", "In Progress", "Done"]
+
   beforeEach(() => {
-    cy.visit("https://kanban-dusky-five.vercel.app/")
+    cy.visit(baseUrl)
     cy.get("body").should("be.visible")
   })
 
-  it("Carrega o título corretamente", () => {
+  it("Deve exibir o título principal corretamente", () => {
     cy.contains("Quadro Kanban").should("be.visible")
   })
 
-  it('Checa se existem as colunas "To Do", "In Progress" e "Done"', () => {
-    cy.contains("To Do").should("be.visible")
-    cy.contains("In Progress").should("be.visible")
-    cy.contains("Done").should("be.visible")
-  })
-
-  it("Valida existência de tarefas nas colunas", () => {
-    cy.contains("To Do")
-      .parent()
-      .parent()
-      .within(() => {
-        cy.contains("Documentar padrões mobile").should("exist")
-      })
-    cy.contains("Done")
-      .parent()
-      .parent()
-      .within(() => {
-        cy.contains("UX Review").should("exist")
-      })
-  })
-
-  it("Verifica responsividade das colunas", () => {
-    cy.viewport(1280, 720) // Desktop
-    cy.contains("To Do").should("be.visible")
-
-    cy.viewport(768, 1024) // Tablet
-    cy.contains("To Do").should("be.visible")
-
-    cy.viewport(375, 667) // Mobile
-    cy.contains("To Do").should("be.visible")
-  })
-
-  it("Carregamento em tempo adequado", () => {
-    const start = Date.now()
-    cy.visit("https://kanban-dusky-five.vercel.app/")
-    cy.contains("Quadro Kanban")
-      .should("be.visible")
-      .then(() => {
-        const loadTime = Date.now() - start
-        expect(loadTime).to.be.lessThan(5000)
-      })
-  })
-
-  it("Verifica estrutura das colunas", () => {
-    const columns = ["To Do", "In Progress", "Done"]
-
+  it("Deve exibir todas as colunas esperadas", () => {
     columns.forEach((column) => {
-      cy.contains(column).parent().parent().should("exist").and("be.visible")
+      cy.contains(column).should("be.visible")
+    })
+  })
+
+  it("Deve conter tarefas específicas nas colunas corretas", () => {
+    cy.contains("To Do").parents().eq(1).within(() => {
+      cy.contains("Documentar padrões mobile").should("exist")
+    })
+
+    cy.contains("Done").parents().eq(1).within(() => {
+      cy.contains("UX Review").should("exist")
+    })
+  })
+
+  it("Deve manter as colunas visíveis em diferentes tamanhos de tela", () => {
+    const viewports = [
+      [1280, 720], // Desktop
+      [768, 1024], // Tablet
+      [375, 667]   // Mobile
+    ]
+
+    viewports.forEach(([width, height]) => {
+      cy.viewport(width, height)
+      columns.forEach((column) => {
+        cy.contains(column).should("be.visible")
+      })
+    })
+  })
+
+  it("Deve carregar a aplicação em menos de 5 segundos", () => {
+    cy.visit(baseUrl, {
+      onBeforeLoad: (win) => {
+        win.performance.mark("start-loading")
+      },
+      onLoad: (win) => {
+        const timing = win.performance.timing
+        const loadTime = timing.loadEventEnd - timing.navigationStart
+        expect(loadTime).to.be.lessThan(5000)
+      }
+    })
+  })
+
+  it("As colunas devem ter estrutura consistente e visível", () => {
+    columns.forEach((column) => {
+      cy.contains(column).parents().eq(1)
+        .should("exist")
+        .and("be.visible")
+        .within(() => {
+          cy.get("div").should("have.length.greaterThan", 0) // pelo menos uma tarefa
+        })
     })
   })
 })
